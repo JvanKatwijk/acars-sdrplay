@@ -31,6 +31,8 @@
 	                                           5000,
 	                                           inputRate, 
 	                                           inputRate / WORKING_RATE) {
+//	                                theFilter (inputRate,
+//	                                           WORKING_RATE, 100) {
 	fprintf (stderr, "handler %d has offset %d\n", channelno, offset);
 	this	-> deviceRate	= inputRate;
 	this	-> offset	= offset;

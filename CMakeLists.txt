@@ -41,6 +41,13 @@ endif ()
 #########################################################################
         find_package (PkgConfig)
 	find_package (LSBId)
+
+	find_package(FFTW3f)
+	if (NOT FFTW3F_FOUND)
+	   message(FATAL_ERROR "please install FFTW3")
+	endif ()
+        include_directories (${FFTW_INCLUDE_DIR})
+
 ##########################################################################
 #	The devices
 
@@ -149,7 +156,9 @@ endif ()
 	     ./channel-decoder.h
 	     ./ringbuffer.h
 	     ./printer.h
+	     ./fft.h
 	     ./filters/fir-filters.h
+	     ./filters/decimating_filter.h
 	     ./devices/device-handler.h
 	)
 
@@ -161,7 +170,9 @@ endif ()
 	     ./channel-handler.cpp
 	     ./channel-decoder.cpp
 	     ./printer.cpp
+	     ./fft.cpp
 	     ./filters/fir-filters.cpp
+	     ./filters/decimating_filter.cpp
 	     ./devices/device-handler.cpp
 	)
 
@@ -173,6 +184,7 @@ endif ()
 	)
 
 	target_link_libraries (${objectName}
+	                       ${FFTW3F_LIBRARIES}
 	                       ${extraLibs}
 	                       -ldl
 

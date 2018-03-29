@@ -34,8 +34,25 @@ one device included. In runtime, the software will detect which
 device is connected and open it.
 
 ------------------------------------------------------------------------
+
+**Commandline parameters**
+
 ------------------------------------------------------------------------
 
+The program is commandline driven, parameters are:
+* -f add a frequency (specified in KHz);
+* -g set the gain at the connected device (scale 1 .. 100);
+* -a set the autogain at the selected device;
+* -p set the ppm correction at the selected device;
+* -v set the verbose option, will generate more output
+* -o set the output: 
+*	OUTTYPE_NONE 0, no output
+*	OUTTYPE_ONELINE 1, brief output
+*	OUTTYPE_STD 2, normal output
+*	OUTTYPE_MONITOR 3, monitor traffic
+
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
 
 # Copyright
 

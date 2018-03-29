@@ -32,6 +32,7 @@
 
 static
 std::atomic<bool>	running;
+void    printOptions    (void);
 
 static void sighandler (int signum) {
         fprintf (stderr, "Signal caught, terminating!\n");
@@ -42,14 +43,14 @@ int	main (int argc, char ** argv) {
 int c;
 struct sigaction sigact;
 std::vector<int> freqList;
-int	frequency	= 131725;
+int	frequency	= 131725;	// default
 int	gain		= 90;
 bool	autogain	= false;
 int	outtype	= 2;
 bool	verbose	= false;
 int	ppmCorrection	= 0;
 
-	while ((c = getopt (argc, argv, "f:g:al:o:p:v")) != EOF) {
+	while ((c = getopt (argc, argv, "f:g:al:o:p:vh")) != EOF) {
 	   switch (c) {
 	      case 'f':
 	         freqList. push_back (atoi (optarg) * 1000);
@@ -69,6 +70,9 @@ int	ppmCorrection	= 0;
 	      case 'v':
 	         verbose	= true;
 	         break;
+	      case 'h':
+	         printOptions ();
+	         exit (1);
 	      default:
 	         break;
 	   }
@@ -89,3 +93,15 @@ int	ppmCorrection	= 0;
 	delete my_acars;
 }
 
+void	printOptions	(void) {
+	fprintf (stderr, "acars options: \n"
+                         "-f  N: add frequency N to the list of frequencies \n"
+	                 "-g  N: set the gain (scale 1 .. 100)\n"
+	                 "-a   : set the autogain of the device\n"
+	                 "-p  N: set the ppm correction \n"
+	                 "-v   : set verbose option\n"
+	                 "-o  N: set output type (0, 1, 2, 3)\n");
+}
+
+
+	

@@ -24,6 +24,7 @@ static flight_t  *flight_head = NULL;
 
 	printer::printer (int slots, int outtype, int channels):
 	                                           freeSlots (slots) {
+	this	-> slots	= slots;
 	this	-> outtype	= outtype;
 	this	-> channels	= channels;
 	nextIn                  = 0;
@@ -58,8 +59,8 @@ void	printer::output_msg (int channel, uint8_t *blk_txt,
 	memcpy (&theData [nextIn]. blk_txt, blk_txt, blk_len);
 	theData [nextIn]. blk_len = blk_len;
 	theData [nextIn]. blk_tm  = blk_tm;
-	theData [nextIn]. channel	= channel;
-        nextIn = (nextIn + 1) % 20;
+	theData [nextIn]. channel = channel;
+        nextIn = (nextIn + 1) % slots;
         usedSlots. Release ();
 }
 
@@ -73,7 +74,7 @@ void	printer::run (void) {
            process_msg (theData [nextOut]. channel,
 	                theData [nextOut]. blk_txt,
 	                theData [nextOut]. blk_len, theData [nextOut]. blk_tm);
-	   nextOut = (nextOut + 1) % 20;
+	   nextOut = (nextOut + 1) % slots;
 	   freeSlots. Release ();
         }
 }
@@ -152,7 +153,6 @@ bool	messageFlag	= false;
 	      break;
 	
 	   case OUTTYPE_MONITOR:
-	      
 	      printmonitor (&msg, channel);
 	      break;
 	}

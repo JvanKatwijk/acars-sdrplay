@@ -91,6 +91,7 @@ private:
 	void	addFlight	(acarsmsg_t * msg, int chn);
 	int	outtype;
 	int	channels;
+	int	slots;
 	std::atomic<bool>       running;
         std::thread		threadHandle;
 	Semaphore       freeSlots;
