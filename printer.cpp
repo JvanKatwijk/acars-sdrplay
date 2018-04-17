@@ -18,17 +18,106 @@
  */
 #include	"printer.h"
 #include	<cstring>
+#include	<sys/types.h>
+#include	<sys/time.h>
+#include	<sys/socket.h>
+#include	<time.h>
+#include	<netdb.h>
+
 #include	"label.c"
+#include	"acars-constants.h"
 
 static flight_t  *flight_head = NULL;
 
-	printer::printer (int slots, int outtype, int channels):
+	printer::printer (int slots, int outtype,
+	                  int channels, int netout, char * RawAddr):
 	                                           freeSlots (slots) {
 	this	-> slots	= slots;
 	this	-> outtype	= outtype;
 	this	-> channels	= channels;
+	this	-> netout	= netout;
+	this	-> rawAddr	= RawAddr;
 	nextIn                  = 0;
 	nextOut                 = 0;
+	char sys_hostname[8];
+	gethostname (sys_hostname, sizeof(sys_hostname));
+        idstation = strndup(sys_hostname, 8);
+
+	if ((netout == NETLOG_NONE) || (rawAddr == NULL)) 
+	   return;
+
+	sockfd = connectServer (rawAddr);
+	if (sockfd < 0)
+	   netout = NETLOG_NONE;
+	if (outtype == OUTTYPE_MONITOR ) {
+//	   verbose = 0;
+	   cls ();
+	   fflush (stdout);
+        }
+}
+
+int	printer::connectServer (char *rawAddr) {
+char *addr;
+char *port;
+struct addrinfo hints, *servinfo, *p;
+int rv, sockfd;
+	
+
+	sockfd	= -1;		// default
+	memset (&hints, 0, sizeof hints);
+	if (rawAddr [0] == '[') {
+	   hints.ai_family = AF_INET6;
+	   addr = rawAddr + 1;
+	   port = strstr (addr, "]");
+	   if (port == NULL) {
+	      fprintf(stderr, "Invalid IPV6 address\n");
+	      return sockfd;
+	   }
+	   *port = 0;
+	   port++;
+	   if (*port != ':')
+	      port =  (char *)"5555";
+	   else
+	      port ++;
+	} else {
+	   hints.ai_family = AF_UNSPEC;
+	   addr = rawAddr;
+	   port = strstr (addr, ":");
+	   if (port == NULL)
+	      port = (char *)"5555";
+	   else {
+	      *port = 0;
+	      port++;
+	   }
+	}
+
+	hints. ai_socktype = SOCK_DGRAM;
+	if ((rv = getaddrinfo(addr, port, &hints, &servinfo)) != 0) {
+	   fprintf (stderr, "Invalid/unknown address %s\n", addr);
+	   return sockfd;
+	}
+
+	for (p = servinfo; p != NULL; p = p -> ai_next) {
+	   if ((sockfd = socket (p -> ai_family,
+	                         p -> ai_socktype, p->ai_protocol)) == -1) {
+	      continue;
+	   }
+
+	   if (connect (sockfd, p -> ai_addr, p -> ai_addrlen) == -1) {
+	      close(sockfd);
+	      continue;
+	   }
+	   break;
+	}
+
+	if (p == NULL) {
+	   fprintf(stderr, "failed to connect\n");
+	   sockfd = -1;
+	   return sockfd;
+	}
+
+	freeaddrinfo (servinfo);
+	return sockfd;
 }
 
 	printer::~printer (void) {
@@ -82,8 +171,9 @@ void	printer::run (void) {
 void	printer::process_msg (int channel, uint8_t *blk_txt,
 	                         int16_t blk_len, struct timeval blk_tm) {
 acarsmsg_t msg;
-int	i, k;
+int	i, k = 0;
 bool	messageFlag	= false;
+
 	msg. channel		= channel;
 	msg. messageTime	= blk_tm;
 	msg. mode		= blk_txt [k++];
@@ -139,6 +229,19 @@ bool	messageFlag	= false;
 	if ((outtype == OUTTYPE_MONITOR) && messageFlag)
 	   addFlight (&msg, channel);
 
+	switch (netout) {
+	   case NETLOG_PLANEPLOTTER:
+	      outpp (&msg, channel);
+	      break;
+
+	   case NETLOG_NATIVE:
+	      outsv (&msg, channel, blk_tm);
+	      break;
+
+	   default:	// no net output
+	      break;
+	}
+	
 	switch (outtype) {
 	   default:
 	   case OUTTYPE_NONE:
@@ -342,4 +445,35 @@ oooi_t oooi;
 	}
 }
 
+void printer::outpp (acarsmsg_t * msg, int channel) {
+char pkt[500];
+char txt[250];
+char *pstr;
+
+	strcpy (txt, (char *)(msg->txt));
+	for (pstr = txt; *pstr != 0; pstr++)
+	   if (*pstr == '\n' || *pstr == '\r') *pstr = ' ';
+
+	sprintf (pkt, "AC%1c %7s %1c %2s %1c %4s %6s %s",
+		 msg->mode, msg->addr, msg->ack, msg->label, msg->bid, msg->no,
+		 msg->fid, txt);
+
+	write (sockfd, pkt, strlen (pkt));
+}
+
+void printer::outsv (acarsmsg_t * msg, int chn, struct timeval tv) {
+char pkt[500];
+struct tm tmp;
+
+	gmtime_r (& (tv.tv_sec), &tmp);
+
+	sprintf(pkt,
+		"%8s %1d %02d/%02d/%04d %02d:%02d:%02d %1d %03d %1c %7s %1c %2s %1c %4s %6s %s",
+		idstation, chn + 1, tmp.tm_mday, tmp.tm_mon + 1,
+		tmp.tm_year + 1900, tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
+		msg->err, msg->lvl, msg->mode, msg->addr, msg->ack, msg->label,
+		msg->bid, msg->no, msg->fid, msg->txt);
+
+	write (sockfd, pkt, strlen (pkt));
+}
 

@@ -49,8 +49,11 @@
 	              int	ppmCorrection,
 	              bool	verbose,
 	              bool	autogain,
-	              int	outtype):
-	                  thePrinter (20, outtype, freqList -> size () ){
+	              int	outtype,
+	              int 	netout,
+	              char	*RawAddr):
+	                  thePrinter (20, outtype, freqList -> size (),
+	                                netout, RawAddr){
 int	i;
 int	frequency	= findFreq (freqList);
 
@@ -104,7 +107,7 @@ int	frequency	= findFreq (freqList);
 	                           cos ((float)i / deviceRate * 2 * M_PI),
 	                           sin ((float)i / deviceRate * 2 * M_PI));
 	int finalFreq	= findFreq (freqList);
-	for (i = 0; i < freqList -> size (); i ++) {
+	for (i = 0; i < (int)(freqList -> size ()); i ++) {
 	   channelHandler *t = new channelHandler (&thePrinter,
 	                                           deviceRate,
 	                                           freqList -> at (i) - finalFreq,
@@ -128,10 +131,9 @@ int	frequency	= findFreq (freqList);
 }
 
 int	acars::findFreq	(std::vector<int> *freqList) {
-int i;
 int	maxFreq	= -1;
 int	minFreq	= 2000000000;
-	for (i = 0; i < freqList -> size (); i ++) {
+	for (uint16_t i = 0; i < freqList -> size (); i ++) {
 	   fprintf (stderr, "frequency %d is %d\n", i, freqList -> at (i));
 	   if (freqList -> at (i) > maxFreq)
 	      maxFreq = freqList -> at (i);

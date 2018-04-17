@@ -46,7 +46,7 @@ mir_sdr_DeviceT devDesc [4];
 	                                     mir_sdr_AGC_DISABLE;
 
 	_I_Buffer	= NULL;
-	err		= mir_sdr_ApiVersion (&ver);
+	(void) mir_sdr_ApiVersion (&ver);
 	if (ver < 2.05) {
 	   fprintf (stderr, "sorry, library too old\n");
 	   throw (24);
@@ -65,11 +65,13 @@ mir_sdr_DeviceT devDesc [4];
 	                              devDesc [deviceIndex]. SerNo, hwVersion);
 	mir_sdr_SetDeviceIdx (deviceIndex);
 
-	if (hwVersion == 2) 
+	if (hwVersion == 2) {
 	   if (antenna == 0)
 	      err = mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_A);
 	   else
 	      err = mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_B);
+	}
+	(void)err;
 
 	if (hwVersion == 255) {
 	   nrBits	= 14;
@@ -125,10 +127,7 @@ int16_t	bankFor_sdr (int32_t freq) {
 }
 
 void	sdrplayHandler::setVFOFrequency	(int32_t newFrequency) {
-mir_sdr_ErrT	err;
 int32_t	realFreq = newFrequency;
-int	gRdBSystem;
-int	samplesPerPacket;
 
 	if (bankFor_sdr (realFreq) == -1)
 	   return;
@@ -258,7 +257,6 @@ void	sdrplayHandler::stopReader	(void) {
 //	Note that the sdrPlay returns 12/14 bit values
 int32_t	sdrplayHandler::getSamples (std::complex<float> *V, int32_t size) { 
 int32_t count	= 0;
-float	sum	= 0;
 
 	count = _I_Buffer	-> getDataFromBuffer (V, size);
 	return count;

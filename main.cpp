@@ -27,6 +27,7 @@
 #include	<signal.h>
 #include	<atomic>
 #include	<complex>
+#include	"acars-constants.h"
 #include	"acars.h"
 #include	<vector>
 
@@ -43,14 +44,15 @@ int	main (int argc, char ** argv) {
 int c;
 struct sigaction sigact;
 std::vector<int> freqList;
-int	frequency	= 131725;	// default
 int	gain		= 90;
 bool	autogain	= false;
 int	outtype	= 2;
 bool	verbose	= false;
 int	ppmCorrection	= 0;
+int	netout		= NETLOG_NONE;
+char	*rawAddr	= NULL;
 
-	while ((c = getopt (argc, argv, "f:g:al:o:p:vh")) != EOF) {
+	while ((c = getopt (argc, argv, "f:g:al:o:p:vhnN")) != EOF) {
 	   switch (c) {
 	      case 'f':
 	         freqList. push_back (atoi (optarg) * 1000);
@@ -70,6 +72,14 @@ int	ppmCorrection	= 0;
 	      case 'v':
 	         verbose	= true;
 	         break;
+	      case 'n':
+	         rawAddr	= optarg;
+	         netout		= NETLOG_PLANEPLOTTER;
+	         break;
+	      case 'N':
+	         rawAddr	= optarg;
+	         netout		= NETLOG_NATIVE;
+	         break;
 	      case 'h':
 	         printOptions ();
 	         exit (1);
@@ -86,7 +96,7 @@ int	ppmCorrection	= 0;
 	   freqList. push_back (131725 * 1000);
 
         acars *my_acars = new acars (&freqList, gain, ppmCorrection,
-	                              verbose, autogain, outtype);
+	                              verbose, autogain, outtype, netout, rawAddr);
 	running. store (true);
 	while (running. load ()) 
 	   sleep (1);

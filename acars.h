@@ -34,7 +34,7 @@ class	channelHandler;
 class acars {
 public:
 		acars	(std::vector<int> *,
-	                 int, int, bool, bool, int);
+	                 int, int, bool, bool, int, int, char *);
 		~acars	(void);
 
 private:
@@ -48,6 +48,7 @@ private:
 	std::complex<float>	*oscillatorTable;
 	bool			verbose;
 	int			outtype;
+	char			*RawAddr;
 };
 
 #endif

@@ -49,7 +49,7 @@ void	inputProcessor::run (void) {
 	   while (running. load () && (theDevice -> Samples () < 4 * 5120))
 	      usleep (1000);
 	   theDevice	-> getSamples (inbuf, 4 * 5120);
-	   for (int i = 0; i < handlers -> size (); i ++) {
+	   for (uint16_t i = 0; i < handlers -> size (); i ++) {
 	      channelHandler *theHandler = handlers -> at (i);
 	      theHandler -> processData (inbuf, 4 * 5120);
 	   }

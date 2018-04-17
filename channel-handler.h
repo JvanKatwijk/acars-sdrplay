@@ -23,7 +23,6 @@
 #include	"acars-constants.h"
 #include	"channel-decoder.h"
 #include	"fir-filters.h"
-#include	"decimating_filter.h"
 #include	"printer.h"
 
 class	channelHandler {
@@ -40,7 +39,6 @@ private:
 	std::complex<float> *oscillatorTable;
 	int		Phase;
 	int		Ratio;
-//	decimating_filter	theFilter;
 	decimatingFIR	theFilter;
 	float		outVector [512];
 	int		outPointer;

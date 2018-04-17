@@ -14,5 +14,9 @@
 #ifndef	__ACARS_CONSTANTS__
 #define	__ACARS_CONSTANTS__
 #define	WORKING_RATE	12000
+
+#define NETLOG_NONE 0
+#define NETLOG_PLANEPLOTTER 1
+#define NETLOG_NATIVE 2
 #endif
 

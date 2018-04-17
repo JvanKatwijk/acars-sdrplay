@@ -156,9 +156,7 @@ endif ()
 	     ./channel-decoder.h
 	     ./ringbuffer.h
 	     ./printer.h
-	     ./fft.h
 	     ./filters/fir-filters.h
-	     ./filters/decimating_filter.h
 	     ./devices/device-handler.h
 	)
 
@@ -170,9 +168,7 @@ endif ()
 	     ./channel-handler.cpp
 	     ./channel-decoder.cpp
 	     ./printer.cpp
-	     ./fft.cpp
 	     ./filters/fir-filters.cpp
-	     ./filters/decimating_filter.cpp
 	     ./devices/device-handler.cpp
 	)
 

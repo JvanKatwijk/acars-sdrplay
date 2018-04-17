@@ -12,6 +12,8 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Library General Public License for more details.
  *
+ *	Copyright 2018, Jan van katwijk, Lazy Chair Computing
+ *
  *	The printer code is largely based on the output.c file
  *	of acars of Thierry Leconte. Added is a simple spool
  *	mechanism.
@@ -74,7 +76,7 @@ struct flight_s {
 
 class	printer {
 public:
-		printer		(int, int, int);
+		printer		(int, int, int, int, char *);
 		~printer	(void);
 	void	output_msg	(int, uint8_t *, int16_t, struct timeval);
 	void	start		(void);
@@ -89,7 +91,13 @@ private:
 	void	printmonitor	(acarsmsg_t * msg, int chn);
 	void	printoneline	(acarsmsg_t * msg, int chn);
 	void	addFlight	(acarsmsg_t * msg, int chn);
+	void	outpp		(acarsmsg_t * msg, int channel);
+	void	outsv		(acarsmsg_t * msg, int channel, struct timeval);
+	int	connectServer	(char *addr);
 	int	outtype;
+	int	sockfd;
+	int	netout;
+	char	*rawAddr;
 	int	channels;
 	int	slots;
 	std::atomic<bool>       running;
@@ -99,6 +107,7 @@ private:
 	int		numberofSlots;
         int16_t         nextIn;
         int16_t         nextOut;
+	char		*idstation;
 
 	struct {
 	   int	channel;
