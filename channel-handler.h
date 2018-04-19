@@ -27,7 +27,7 @@
 
 class	channelHandler {
 public:
-	channelHandler	(printer *,int, int, int, bool, std::complex<float> *);
+	channelHandler	(printer *, int, int, int, int, bool, std::complex<float> *);
 	~channelHandler	(void);
 void	processData	(std::complex<float> *, int);
 private:

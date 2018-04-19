@@ -48,7 +48,8 @@ typedef struct {
         unsigned char bs, be;
         unsigned char txt[250];
         int err, lvl;
-	int	channel;
+	int	channel;	
+	int	frequency;
 	struct timeval	messageTime;
 } acarsmsg_t;
 
@@ -78,12 +79,12 @@ class	printer {
 public:
 		printer		(int, int, int, int, char *);
 		~printer	(void);
-	void	output_msg	(int, uint8_t *, int16_t, struct timeval);
+	void	output_msg	(int, int, uint8_t *, int16_t, struct timeval);
 	void	start		(void);
 	void	stop		(void);
 private:
 	void	run		(void);
-	void    process_msg	(int, uint8_t *, int16_t, struct timeval);
+	void    process_msg	(int, int, uint8_t *, int16_t, struct timeval);
 	void	printmsg	(acarsmsg_t *);
 	void	printdate	(struct timeval t);
 	void	printtime	(struct timeval t);
@@ -93,7 +94,10 @@ private:
 	void	addFlight	(acarsmsg_t * msg, int chn);
 	void	outpp		(acarsmsg_t * msg, int channel);
 	void	outsv		(acarsmsg_t * msg, int channel, struct timeval);
+	void	buildJSON	(acarsmsg_t *msg, int chn);
 	int	connectServer	(char *addr);
+	uint8_t	*jsonbuf;
+	flight_t  *flight_head;
 	int	outtype;
 	int	sockfd;
 	int	netout;
@@ -111,6 +115,7 @@ private:
 
 	struct {
 	   int	channel;
+	   int	frequency;
 	   uint8_t	blk_txt [255];
 	   int	blk_len;
 	   struct timeval blk_tm;

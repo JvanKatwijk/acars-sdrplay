@@ -11,8 +11,6 @@
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Library General Public License for more details.
- *
- *
  */
 
 #include        <unistd.h>
@@ -46,8 +44,8 @@ struct sigaction sigact;
 std::vector<int> freqList;
 int	gain		= 90;
 bool	autogain	= false;
-int	outtype	= 2;
-bool	verbose	= false;
+int	outtype		= 2;
+bool	verbose		= false;
 int	ppmCorrection	= 0;
 int	netout		= NETLOG_NONE;
 char	*rawAddr	= NULL;

@@ -24,13 +24,14 @@
 #include	"printer.h"
 
 	channelDecoder::channelDecoder (printer	*myPrinter,
-	                                int channelNumber,
-	                                bool verbose) {
+	                                int	channelNumber,
+	                                int	frequency,
+	                                bool	verbose) {
 
 	this	-> myPrinter	= myPrinter;
 	channel		= channelNumber;
+	this	-> frequency	= frequency;
 	this	-> verbose	= verbose;
-	fprintf (stderr, "hier is verbose = %d\n", verbose);
 	MskPhi		= 0;
 	MskS		= 0;
 	MskDf		= 0;
@@ -392,6 +393,6 @@ uint16_t the_crc;
 	   return;
 	}
 
-	myPrinter -> output_msg (channel, blk_txt, blk_len, blk_tm);
+	myPrinter -> output_msg (channel, frequency, blk_txt, blk_len, blk_tm);
 }
 

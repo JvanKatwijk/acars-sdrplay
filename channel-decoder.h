@@ -40,8 +40,9 @@ class	printer;
 class	channelDecoder {
 public:
 		channelDecoder	(printer *myPrinter,
-	                         int channelNumber,
-	                         bool verbose);
+	                         int	channelNumber,
+	                         int	frequency,
+	                         bool	verbose);
 		~channelDecoder	(void);
 	void	demodMSK	(float *, int);
 private:
@@ -54,6 +55,7 @@ private:
                                  int blk_len, const uint16_t crc);
 	void	processBlock	(uint8_t *crc,
                                  uint8_t *blk_txt, int blk_len);
+	int	frequency;
 	printer	*myPrinter;
 	int	channel;
 	bool	verbose;

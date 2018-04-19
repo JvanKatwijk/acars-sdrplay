@@ -110,6 +110,7 @@ int	frequency	= findFreq (freqList);
 	for (i = 0; i < (int)(freqList -> size ()); i ++) {
 	   channelHandler *t = new channelHandler (&thePrinter,
 	                                           deviceRate,
+	                                           freqList -> at (i),
 	                                           freqList -> at (i) - finalFreq,
 	                                           i,
 	                                           verbose,

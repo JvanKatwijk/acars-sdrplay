@@ -18,15 +18,16 @@
  */
 #include	"channel-handler.h"
 
-
 	channelHandler::channelHandler (printer *thePrinter,
 	                                int	inputRate,
+	                                int	frequency,
 	                                int	offset,
 	                                int	channelno, 
 	                                bool	verbose,
 	                                std::complex<float> *table):
 	                                theDecoder (thePrinter,
-	                                            channelno, verbose),
+	                                            channelno, verbose,
+	                                            frequency),
 	                                theFilter (16 * inputRate / WORKING_RATE + 1,
 	                                           5000,
 	                                           inputRate, 

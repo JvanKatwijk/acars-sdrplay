@@ -156,6 +156,7 @@ endif ()
 	     ./channel-decoder.h
 	     ./ringbuffer.h
 	     ./printer.h
+	     ./cJSON.h
 	     ./filters/fir-filters.h
 	     ./devices/device-handler.h
 	)
@@ -168,6 +169,7 @@ endif ()
 	     ./channel-handler.cpp
 	     ./channel-decoder.cpp
 	     ./printer.cpp
+	     ./cJSON.c
 	     ./filters/fir-filters.cpp
 	     ./devices/device-handler.cpp
 	)

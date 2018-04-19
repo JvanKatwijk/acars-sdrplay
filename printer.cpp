@@ -26,8 +26,9 @@
 
 #include	"label.c"
 #include	"acars-constants.h"
+#include	"cJSON.h"
 
-static flight_t  *flight_head = NULL;
+#define	JSONBUFLEN	3000
 
 	printer::printer (int slots, int outtype,
 	                  int channels, int netout, char * RawAddr):
@@ -37,11 +38,17 @@ static flight_t  *flight_head = NULL;
 	this	-> channels	= channels;
 	this	-> netout	= netout;
 	this	-> rawAddr	= RawAddr;
+	flight_head		= NULL;
 	nextIn                  = 0;
 	nextOut                 = 0;
 	char sys_hostname[8];
 	gethostname (sys_hostname, sizeof(sys_hostname));
         idstation = strndup(sys_hostname, 8);
+
+	if (outtype == OUTTYPE_JSON)
+	   jsonbuf	= new uint8_t [3000];
+	else
+	   jsonbuf	= NULL;
 
 	if ((netout == NETLOG_NONE) || (rawAddr == NULL)) 
 	   return;
@@ -139,7 +146,7 @@ void	printer::stop	(void) {
 	}
 }
 
-void	printer::output_msg (int channel, uint8_t *blk_txt,
+void	printer::output_msg (int channel, int frequency,  uint8_t *blk_txt,
 	                     int16_t blk_len, struct timeval blk_tm) {
 	while (!freeSlots. tryAcquire (200))
 	   if (!running. load ())
@@ -149,6 +156,7 @@ void	printer::output_msg (int channel, uint8_t *blk_txt,
 	theData [nextIn]. blk_len = blk_len;
 	theData [nextIn]. blk_tm  = blk_tm;
 	theData [nextIn]. channel = channel;
+	theData [nextIn]. frequency = frequency;
         nextIn = (nextIn + 1) % slots;
         usedSlots. Release ();
 }
@@ -161,20 +169,23 @@ void	printer::run (void) {
 	      if (!running)
 	         return;
            process_msg (theData [nextOut]. channel,
+	                theData [nextOut]. frequency,
 	                theData [nextOut]. blk_txt,
-	                theData [nextOut]. blk_len, theData [nextOut]. blk_tm);
+	                theData [nextOut]. blk_len,
+	                theData [nextOut]. blk_tm);
 	   nextOut = (nextOut + 1) % slots;
 	   freeSlots. Release ();
         }
 }
 
-void	printer::process_msg (int channel, uint8_t *blk_txt,
+void	printer::process_msg (int channel, int frequency, uint8_t *blk_txt,
 	                         int16_t blk_len, struct timeval blk_tm) {
 acarsmsg_t msg;
 int	i, k = 0;
 bool	messageFlag	= false;
 
 	msg. channel		= channel;
+	msg. frequency		= frequency;
 	msg. messageTime	= blk_tm;
 	msg. mode		= blk_txt [k++];
 	for (i = 0; i < 7; i ++, k ++) 
@@ -258,11 +269,18 @@ bool	messageFlag	= false;
 	   case OUTTYPE_MONITOR:
 	      printmonitor (&msg, channel);
 	      break;
+
+	   case OUTTYPE_JSON:
+	      buildJSON (&msg, channel);
+	      fprintf (stderr, "%s", jsonbuf);
+	      break;
 	}
 }
 
 
 void	printer::printmsg (acarsmsg_t *msg) {
+oooi_t	oooi;
+
 	printdate (msg -> messageTime);
 	fprintf (stderr, "\n channel %d --------------------------------\n",
 	                                                msg -> channel);
@@ -281,11 +299,29 @@ void	printer::printmsg (acarsmsg_t *msg) {
 	   }
 	}
 
-	fprintf(stderr, "\n");
-	if (msg -> txt [0])
-	   fprintf (stderr, "%s\n", msg -> txt);
-	if (msg -> be == 0x17)
+	fprintf (stderr, "\n");
+        if (msg -> txt[0])
+	   fprintf (stderr, "%s\n", msg->txt);
+        if (msg -> be == 0x17)
 	   fprintf (stderr, "ETB\n");
+
+	if (DecodeLabel (msg, &oooi)) {
+	   fprintf (stderr, "##########################\n");
+	   if (oooi. da [0])
+	      fprintf (stderr, "Destination Airport : %s\n", oooi. da);
+	   if (oooi. sa [0])
+	      fprintf (stderr, "Departure Airport : %s\n", oooi. sa);
+	   if (oooi. eta [0])
+	      fprintf (stderr, "Estimation Time of Arrival : %s\n", oooi.eta);
+	   if (oooi. gout [0])
+	      fprintf (stderr,"Gate out Time : %s\n",oooi. gout);
+	   if (oooi. gin [0])
+	      fprintf (stderr, "Gate in Time : %s\n", oooi. gin);
+	   if (oooi. woff [0])
+	      fprintf (stderr, "Wheels off Time : %s\n", oooi. woff);
+	   if (oooi. won [0])
+	      fprintf (stderr, "Wheels on Time : %s\n", oooi. won);
+        }
 
 	fflush(stderr);
 }
@@ -477,3 +513,69 @@ struct tm tmp;
 	write (sockfd, pkt, strlen (pkt));
 }
 
+void	printer::buildJSON (acarsmsg_t *msg, int chn) {
+cJSON *json_obj;
+oooi_t	oooi;
+char convert_tmp[8];
+double t	= (double)msg -> messageTime.tv_sec +
+	              ((double)msg -> messageTime. tv_usec)/1e6;
+json_obj	= cJSON_CreateObject ();
+
+        if (json_obj == NULL)
+                return;
+
+        cJSON_AddNumberToObject (json_obj, "timestamp", t);
+        cJSON_AddNumberToObject (json_obj, "channel", chn);
+        snprintf (convert_tmp, sizeof(convert_tmp), "%3.3f", msg -> frequency);
+        cJSON_AddRawToObject(json_obj, "freq", convert_tmp);
+
+        cJSON_AddNumberToObject(json_obj, "level", msg->lvl);
+        cJSON_AddNumberToObject(json_obj, "error", msg->err);
+        snprintf(convert_tmp, sizeof(convert_tmp), "%c", msg->mode);
+        cJSON_AddStringToObject(json_obj, "mode", convert_tmp);
+        cJSON_AddStringToObject(json_obj, "label", (char *)(msg -> label));
+
+	if (msg -> bid) {
+	   snprintf (convert_tmp, sizeof (convert_tmp), "%c", msg -> bid);
+	   cJSON_AddStringToObject(json_obj, "block_id", convert_tmp);
+
+	   if (msg -> ack == 0x15) {
+	      cJSON_AddFalseToObject (json_obj, "ack");
+	   } else {
+	      snprintf (convert_tmp, sizeof(convert_tmp), "%c", msg -> ack);
+	      cJSON_AddStringToObject (json_obj, "ack", convert_tmp);
+	   }
+
+	   cJSON_AddStringToObject (json_obj, "tail", (char *)(msg -> addr));
+	   if (msg -> mode <= 'Z') {
+	      cJSON_AddStringToObject (json_obj, "flight", (char *)(msg -> fid));
+	      cJSON_AddStringToObject (json_obj, "msgno",  (char *)(msg -> no));
+	   }
+        }
+
+	if (msg -> txt [0])
+	   cJSON_AddStringToObject (json_obj, "text", (char *)(msg -> txt));
+
+	if (msg -> be == 0x17)
+	   cJSON_AddTrueToObject (json_obj, "end");
+
+	if (DecodeLabel (msg, &oooi)) {
+	   if (oooi. sa [0])
+	      cJSON_AddStringToObject (json_obj, "depa", oooi.sa);
+	   if (oooi. da [0])
+	      cJSON_AddStringToObject (json_obj, "dsta", oooi.da);
+	   if (oooi. eta [0])
+	      cJSON_AddStringToObject (json_obj, "eta", oooi.eta);
+	   if (oooi. gout [0])
+	      cJSON_AddStringToObject (json_obj, "gtout", oooi.gout);
+	   if (oooi. gin [0])
+	      cJSON_AddStringToObject (json_obj, "gtin", oooi.gin);
+	   if (oooi. woff [0])
+	      cJSON_AddStringToObject (json_obj, "wloff", oooi.woff);
+	   if (oooi. won[0])
+	      cJSON_AddStringToObject (json_obj, "wlin", oooi.won);
+        }
+        cJSON_AddStringToObject (json_obj, "station_id", idstation);
+        (void)cJSON_PrintPreallocated (json_obj, (char *)jsonbuf, JSONBUFLEN, 0);
+        cJSON_Delete (json_obj);
+}
