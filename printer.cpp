@@ -184,6 +184,7 @@ acarsmsg_t msg;
 int	i, k = 0;
 bool	messageFlag	= false;
 
+	fprintf (stderr, "message on frequency %d\n", frequency);
 	msg. channel		= channel;
 	msg. frequency		= frequency;
 	msg. messageTime	= blk_tm;
@@ -272,7 +273,7 @@ bool	messageFlag	= false;
 
 	   case OUTTYPE_JSON:
 	      buildJSON (&msg, channel);
-	      fprintf (stderr, "%s", jsonbuf);
+	      fprintf (stderr, "\n%s\n", jsonbuf);
 	      break;
 	}
 }
@@ -526,8 +527,8 @@ json_obj	= cJSON_CreateObject ();
 
         cJSON_AddNumberToObject (json_obj, "timestamp", t);
         cJSON_AddNumberToObject (json_obj, "channel", chn);
-        snprintf (convert_tmp, sizeof(convert_tmp), "%3.3f", msg -> frequency);
-        cJSON_AddRawToObject(json_obj, "freq", convert_tmp);
+//	snprintf (convert_tmp, sizeof(convert_tmp), "%3.3f", msg -> frequency / 1000);
+        cJSON_AddNumberToObject (json_obj, "freq", msg -> frequency / 1000);
 
         cJSON_AddNumberToObject(json_obj, "level", msg->lvl);
         cJSON_AddNumberToObject(json_obj, "error", msg->err);

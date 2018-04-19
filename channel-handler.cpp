@@ -26,8 +26,9 @@
 	                                bool	verbose,
 	                                std::complex<float> *table):
 	                                theDecoder (thePrinter,
-	                                            channelno, verbose,
-	                                            frequency),
+	                                            channelno,
+	                                            frequency,
+	                                            verbose),
 	                                theFilter (16 * inputRate / WORKING_RATE + 1,
 	                                           5000,
 	                                           inputRate, 
