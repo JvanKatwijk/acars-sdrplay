@@ -3,7 +3,7 @@
 acars is a partial rewrite in C++ of
 [acarsdec][https://github.com/TLeconte/acarsdec], written by Thierry Leconte.
 The reason for this rewrite was the idea of including the SDRplay device
-as input device. 
+as input device which required some reorganization of the decoding.
 
 ------------------------------------------------------------------------
 
@@ -50,6 +50,9 @@ The program is commandline driven, parameters are:
 *	OUTTYPE_ONELINE 1, brief output
 *	OUTTYPE_STD 2, normal output
 *	OUTTYPE_MONITOR 3, monitor traffic
+*	OUTTYPE_JSON 4, output in JSON format
+* -N identaddr will send the output also to the specified internet addres
+     (if connection can be made to someone who is listening)
 
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------

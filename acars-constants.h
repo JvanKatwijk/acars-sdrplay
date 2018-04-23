@@ -15,8 +15,16 @@
 #define	__ACARS_CONSTANTS__
 #define	WORKING_RATE	12000
 
-#define NETLOG_NONE 0
 #define NETLOG_PLANEPLOTTER 1
-#define NETLOG_NATIVE 2
+#define NETLOG_NATIVE	2
+#define NETLOG_JSON	4
+#define	ANY_NETOUT	07
+
+
+#define OUTTYPE_ONELINE 1
+#define OUTTYPE_STD	2
+#define OUTTYPE_MONITOR 4
+#define OUTTYPE_JSON	010
+#define	ANY_OUTPUT	017
 #endif
 

@@ -31,12 +31,11 @@
 #define	JSONBUFLEN	3000
 
 	printer::printer (int slots, int outtype,
-	                  int channels, int netout, char * RawAddr):
+	                  int channels, char * RawAddr):
 	                                           freeSlots (slots) {
 	this	-> slots	= slots;
 	this	-> outtype	= outtype;
 	this	-> channels	= channels;
-	this	-> netout	= netout;
 	this	-> rawAddr	= RawAddr;
 	flight_head		= NULL;
 	nextIn                  = 0;
@@ -45,22 +44,25 @@
 	gethostname (sys_hostname, sizeof(sys_hostname));
         idstation = strndup(sys_hostname, 8);
 
-	if (outtype == OUTTYPE_JSON)
+	if ((outtype & OUTTYPE_JSON) != 0)
 	   jsonbuf	= new uint8_t [3000];
 	else
 	   jsonbuf	= NULL;
 
-	if ((netout == NETLOG_NONE) || (rawAddr == NULL)) 
+	if (((outtype & ANY_NETOUT) == 0) || (rawAddr == NULL)) 
 	   return;
 
 	sockfd = connectServer (rawAddr);
 	if (sockfd < 0)
-	   netout = NETLOG_NONE;
-	if (outtype == OUTTYPE_MONITOR ) {
+	   outtype &= ~ANY_NETOUT;	// kill any desire to output on the net
+	else
+	   fprintf (stderr, "connected\n");
+	if ((outtype & OUTTYPE_MONITOR) != 0) {
 //	   verbose = 0;
 	   cls ();
 	   fflush (stdout);
         }
+	
 }
 
 int	printer::connectServer (char *rawAddr) {
@@ -68,8 +70,8 @@ char *addr;
 char *port;
 struct addrinfo hints, *servinfo, *p;
 int rv, sockfd;
-	
 
+	fprintf (stderr, "connecting to %s\n", rawAddr);
 	sockfd	= -1;		// default
 	memset (&hints, 0, sizeof hints);
 	if (rawAddr [0] == '[') {
@@ -99,7 +101,7 @@ int rv, sockfd;
 	}
 
 	hints. ai_socktype = SOCK_DGRAM;
-	if ((rv = getaddrinfo(addr, port, &hints, &servinfo)) != 0) {
+	if ((rv = getaddrinfo (addr, port, &hints, &servinfo)) != 0) {
 	   fprintf (stderr, "Invalid/unknown address %s\n", addr);
 	   return sockfd;
 	}
@@ -111,9 +113,11 @@ int rv, sockfd;
 	   }
 
 	   if (connect (sockfd, p -> ai_addr, p -> ai_addrlen) == -1) {
-	      close(sockfd);
+	      close (sockfd);
 	      continue;
 	   }
+
+	   fprintf (stderr, "bingo\n");
 	   break;
 	}
 
@@ -189,16 +193,19 @@ bool	messageFlag	= false;
 	msg. frequency		= frequency;
 	msg. messageTime	= blk_tm;
 	msg. mode		= blk_txt [k++];
+	msg. err		= 0;
+	msg. lvl		= 0;
 	for (i = 0; i < 7; i ++, k ++) 
 	   msg. addr [i] = blk_txt [k];
 	msg. addr [7] = 0;
 //
 //	ACK/NAK
 	msg. ack	= blk_txt [k++];
+	msg. ack	= 'X';
 
 	msg. label [0]	= blk_txt [k++];
 	msg. label [1]	= blk_txt [k++];
-	if (msg.label [1] == 0x7f)
+	if (msg .label [1] == 0x7f)
 	   msg. label [1] ='d';
 	msg. label [2] = '\0';
 
@@ -238,48 +245,60 @@ bool	messageFlag	= false;
 //	txt end 
 	msg. be = blk_txt [blk_len - 1];
 
-	if ((outtype == OUTTYPE_MONITOR) && messageFlag)
+	if (((outtype & OUTTYPE_MONITOR) != 0) && messageFlag)
 	   addFlight (&msg, channel);
 
-	switch (netout) {
-	   case NETLOG_PLANEPLOTTER:
-	      outpp (&msg, channel);
-	      break;
-
-	   case NETLOG_NATIVE:
-	      outsv (&msg, channel, blk_tm);
-	      break;
-
-	   default:	// no net output
-	      break;
+	if ((outtype & (NETLOG_JSON |OUTTYPE_JSON)) != 0) {
+	   handle_json (&msg, channel, blk_tm);
+	   return;
 	}
-	
-	switch (outtype) {
-	   default:
-	   case OUTTYPE_NONE:
-	      break;
 
-	   case OUTTYPE_ONELINE:
-	      printoneline (&msg, channel);
+	if ((outtype & ANY_NETOUT) != 0)
+	   handle_netout (&msg, channel, blk_tm);
+
+	if ((outtype & (ANY_OUTPUT)) != 0)
+	   show_output (&msg, channel, blk_tm);
+}
+
+void	printer::handle_json (acarsmsg_t *msg, int channel,
+	                                      struct timeval blk_tm) {
+	buildJSON (msg, channel);
+//	if ((outtype & NETLOG_JSON) != 0)
+//	   outjson ();
+	if ((outtype & OUTTYPE_JSON) != 0)
+	   fprintf (stderr, "%s\n", jsonbuf);
+}
+
+void	printer::handle_netout (acarsmsg_t *msg, int channel,
+	                                        struct timeval blk_tm) {
+	if ((outtype & NETLOG_PLANEPLOTTER) != 0)
+	   outpp (msg, channel, blk_tm);
+	else
+	if ((outtype & NETLOG_NATIVE) != 0)
+	   outsv (msg, channel, blk_tm);
+}
+
+void	printer::show_output (acarsmsg_t *msg, int channel, struct timeval tv) {
+	switch (outtype) {
+	   default:		// should not happen
 	      break;
 
 	   case OUTTYPE_STD:
-	      printmsg (&msg);
+	      printmsg (msg, channel);
 	      break;
 	
-	   case OUTTYPE_MONITOR:
-	      printmonitor (&msg, channel);
+	   case OUTTYPE_ONELINE:
+	      printoneline (msg, channel);
 	      break;
 
-	   case OUTTYPE_JSON:
-	      buildJSON (&msg, channel);
-	      fprintf (stderr, "\n%s\n", jsonbuf);
+	   case OUTTYPE_MONITOR:
+	      printmonitor (msg, channel);
 	      break;
+
 	}
 }
 
-
-void	printer::printmsg (acarsmsg_t *msg) {
+void	printer::printmsg (acarsmsg_t *msg, int channel) {
 oooi_t	oooi;
 
 	printdate (msg -> messageTime);
@@ -289,7 +308,7 @@ oooi_t	oooi;
 	fprintf (stderr, "Label : %2s ", msg -> label);
 	if (msg -> bid) {
 	   fprintf (stderr, "Id : %1c ", msg -> bid);
-	   if (msg -> ack==0x15)
+	   if (msg -> ack == 0x15)
 	      fprintf (stderr, "Nak\n");
 	   else
 	      fprintf (stderr, "Ack : %1c\n", msg -> ack);
@@ -482,7 +501,7 @@ oooi_t oooi;
 	}
 }
 
-void printer::outpp (acarsmsg_t * msg, int channel) {
+void printer::outpp (acarsmsg_t * msg, int channel, struct timeval blk_tm) {
 char pkt[500];
 char txt[250];
 char *pstr;
@@ -532,7 +551,7 @@ json_obj	= cJSON_CreateObject ();
 
         cJSON_AddNumberToObject(json_obj, "level", msg->lvl);
         cJSON_AddNumberToObject(json_obj, "error", msg->err);
-        snprintf(convert_tmp, sizeof(convert_tmp), "%c", msg->mode);
+        snprintf (convert_tmp, sizeof (convert_tmp), "%c", msg -> mode);
         cJSON_AddStringToObject(json_obj, "mode", convert_tmp);
         cJSON_AddStringToObject(json_obj, "label", (char *)(msg -> label));
 
@@ -576,6 +595,7 @@ json_obj	= cJSON_CreateObject ();
 	   if (oooi. won[0])
 	      cJSON_AddStringToObject (json_obj, "wlin", oooi.won);
         }
+
         cJSON_AddStringToObject (json_obj, "station_id", idstation);
         (void)cJSON_PrintPreallocated (json_obj, (char *)jsonbuf, JSONBUFLEN, 0);
         cJSON_Delete (json_obj);

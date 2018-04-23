@@ -34,7 +34,7 @@ class	channelHandler;
 class acars {
 public:
 		acars	(std::vector<int> *,
-	                 int, int, bool, bool, int, int, char *);
+	                 int, int, bool, bool, int, char *);
 		~acars	(void);
 
 private:
@@ -47,8 +47,6 @@ private:
 	int			findFreq	(std::vector<int> *);
 	std::complex<float>	*oscillatorTable;
 	bool			verbose;
-	int			outtype;
-	char			*RawAddr;
 };
 
 #endif

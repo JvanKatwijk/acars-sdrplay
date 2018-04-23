@@ -29,13 +29,14 @@
 	                                            channelno,
 	                                            frequency,
 	                                            verbose),
-	                                theFilter (16 * inputRate / WORKING_RATE + 1,
+	                                theFilter (inputRate / WORKING_RATE + 1,
 	                                           5000,
 	                                           inputRate, 
 	                                           inputRate / WORKING_RATE) {
 //	                                theFilter (inputRate,
 //	                                           WORKING_RATE, 100) {
-	fprintf (stderr, "handler %d has offset %d\n", channelno, offset);
+	fprintf (stderr, "handler %d has offset %d (rate %d)\n",
+	                  channelno, offset, inputRate);
 	this	-> deviceRate	= inputRate;
 	this	-> offset	= offset;
 	this	-> channelno	= channelno;
@@ -48,7 +49,8 @@
 	channelHandler::~channelHandler (void) {
 }
 
-void	channelHandler::processData (std::complex<float> *input, int length) {
+void	channelHandler::processData (const std::complex<float> *input,
+	                                   int length) {
 int	i;
 std::complex<float> o;
 

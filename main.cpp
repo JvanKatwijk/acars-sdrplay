@@ -44,13 +44,13 @@ struct sigaction sigact;
 std::vector<int> freqList;
 int	gain		= 90;
 bool	autogain	= false;
-int	outtype		= 2;
+int	outtype;
 bool	verbose		= false;
 int	ppmCorrection	= 0;
-int	netout		= NETLOG_NONE;
 char	*rawAddr	= NULL;
 
-	while ((c = getopt (argc, argv, "f:g:al:o:p:vhnN")) != EOF) {
+	while ((c = getopt (argc, argv, "f:g:al:o:p:vhn:N:")) != EOF) {
+	int help;
 	   switch (c) {
 	      case 'f':
 	         freqList. push_back (atoi (optarg) * 1000);
@@ -62,8 +62,22 @@ char	*rawAddr	= NULL;
 	         autogain	= true;
 	         break;
 	      case 'o':
-	         outtype	= atoi (optarg);
+	         help		= atoi (optarg);
+	         if ((outtype & ANY_OUTPUT) == 0) {
+	            if (help == 1) 
+	              outtype |= 1;
+	            else
+	            if (help == 2)
+	              outtype |= 2;
+	            else
+	            if (help == 3)
+	              outtype |= 4;
+	            else
+	            if (help == 4)
+	              outtype |= 010;
+	         }
 	         break;
+
 	      case 'p':
 	         ppmCorrection	= atoi (optarg);
 	         break;
@@ -71,20 +85,35 @@ char	*rawAddr	= NULL;
 	         verbose	= true;
 	         break;
 	      case 'n':
-	         rawAddr	= optarg;
-	         netout		= NETLOG_PLANEPLOTTER;
+	         if ((outtype & ANY_NETOUT) == 0) {
+	            rawAddr	= optarg;
+	            outtype	|= NETLOG_PLANEPLOTTER;
+	         }
 	         break;
 	      case 'N':
-	         rawAddr	= optarg;
-	         netout		= NETLOG_NATIVE;
+	         if ((outtype & ANY_NETOUT) == 0) {
+	            rawAddr	= optarg;
+	            outtype	|= NETLOG_NATIVE;
+	         }
 	         break;
+	      case 'J':
+	         if ((outtype & ANY_NETOUT) == 0) {
+	            rawAddr	= optarg;
+	            outtype	|= NETLOG_JSON;
+	         }
+	         break;
+
 	      case 'h':
 	         printOptions ();
 	         exit (1);
+
 	      default:
 	         break;
 	   }
 	}
+
+	if ((outtype & ANY_OUTPUT) == 0)
+	   outtype |= OUTTYPE_STD;
 
 	sigact.sa_handler = sighandler;
 	sigemptyset (&sigact.sa_mask);
@@ -93,8 +122,9 @@ char	*rawAddr	= NULL;
 	if (freqList. size () == 0)	// choose a default
 	   freqList. push_back (131725 * 1000);
 
+	fprintf (stderr, "rawAddr = %s\n", rawAddr);
         acars *my_acars = new acars (&freqList, gain, ppmCorrection,
-	                              verbose, autogain, outtype, netout, rawAddr);
+	                              verbose, autogain, outtype, rawAddr);
 	running. store (true);
 	while (running. load ()) 
 	   sleep (1);
@@ -108,7 +138,10 @@ void	printOptions	(void) {
 	                 "-a   : set the autogain of the device\n"
 	                 "-p  N: set the ppm correction \n"
 	                 "-v   : set verbose option\n"
-	                 "-o  N: set output type (0, 1, 2, 3)\n");
+	                 "-o  N: set output type (0, 1, 2, 3)\n"
+	                 "-n  inetaddr : dump output to inetaddr\n"
+	                 "-N  inetaddr : dump output to inetaddr\n"
+	                 "-J  inetaddr : dump output to inetaddr\n");
 }
 
 

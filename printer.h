@@ -16,7 +16,7 @@
  *
  *	The printer code is largely based on the output.c file
  *	of acars of Thierry Leconte. Added is a simple spool
- *	mechanism.
+ *	mechanism and some code is organized another way.
  *	
  */
 #ifndef	__ACARS_PRINTER__
@@ -30,12 +30,7 @@
 #include        <mutex>
 #include	"semaphore.h"
 #include        <atomic>
-
-#define OUTTYPE_NONE 0
-#define OUTTYPE_ONELINE 1
-#define OUTTYPE_STD 2
-#define OUTTYPE_MONITOR 3
-#define OUTTYPE_JSON 4
+#include	"acars-constants.h"
 
 typedef struct {
         unsigned char mode;
@@ -77,7 +72,7 @@ struct flight_s {
 
 class	printer {
 public:
-		printer		(int, int, int, int, char *);
+		printer		(int, int, int, char *);
 		~printer	(void);
 	void	output_msg	(int, int, uint8_t *, int16_t, struct timeval);
 	void	start		(void);
@@ -85,14 +80,17 @@ public:
 private:
 	void	run		(void);
 	void    process_msg	(int, int, uint8_t *, int16_t, struct timeval);
-	void	printmsg	(acarsmsg_t *);
+	void	printmsg	(acarsmsg_t *, int);
 	void	printdate	(struct timeval t);
 	void	printtime	(struct timeval t);
 	void    cls		(void);
+	void	handle_json	(acarsmsg_t *msg, int, struct timeval);
+	void	handle_netout	(acarsmsg_t *msg, int, struct timeval);
+	void	show_output	(acarsmsg_t *msg, int, struct timeval);
 	void	printmonitor	(acarsmsg_t * msg, int chn);
 	void	printoneline	(acarsmsg_t * msg, int chn);
 	void	addFlight	(acarsmsg_t * msg, int chn);
-	void	outpp		(acarsmsg_t * msg, int channel);
+	void	outpp		(acarsmsg_t * msg, int channel, struct timeval);
 	void	outsv		(acarsmsg_t * msg, int channel, struct timeval);
 	void	buildJSON	(acarsmsg_t *msg, int chn);
 	int	connectServer	(char *addr);
@@ -100,7 +98,6 @@ private:
 	flight_t  *flight_head;
 	int	outtype;
 	int	sockfd;
-	int	netout;
 	char	*rawAddr;
 	int	channels;
 	int	slots;

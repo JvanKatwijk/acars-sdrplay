@@ -29,7 +29,7 @@ class	channelHandler {
 public:
 	channelHandler	(printer *, int, int, int, int, bool, std::complex<float> *);
 	~channelHandler	(void);
-void	processData	(std::complex<float> *, int);
+void	processData	(const std::complex<float> *, int);
 private:
 	int		deviceRate;
 	channelDecoder	theDecoder;

@@ -50,13 +50,12 @@
 	              bool	verbose,
 	              bool	autogain,
 	              int	outtype,
-	              int 	netout,
 	              char	*RawAddr):
-	                  thePrinter (20, outtype, freqList -> size (),
-	                                netout, RawAddr){
+	                  thePrinter (20, outtype,
+	                                  freqList -> size (),
+	                                  RawAddr){
 int	i;
 int	frequency	= findFreq (freqList);
-
 	if (frequency == -1)
 	   exit (22);
 	this	-> verbose	= verbose;
@@ -100,7 +99,8 @@ int	frequency	= findFreq (freqList);
 	   exit (1);
 	}
 
-	int deviceRate	= theDevice	-> getRate ();
+	int deviceRate	= 2400000;
+//	int deviceRate	= theDevice	-> getRate ();
 	oscillatorTable	= new std::complex<float> [deviceRate];
 	for (i = 0; i < deviceRate; i ++)
 	   oscillatorTable [i] = std::complex<float> (
