@@ -1,7 +1,10 @@
 #
 /*
- *  Copyright (c) 2015 Thierry Leconte
- *
+ *	Copyright (c) 2015 Thierry Leconte
+ *	Copyright (c) 2018 
+ *	Jan Van Katwijk, Lazy Chair Computing
+ *	This file is a rewrite of the file "msk.c" and
+ *	parts of acars.c of the original acars software
  *   
  *   This code is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License version 2
@@ -11,12 +14,6 @@
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Library General Public License for more details.
- *
- *	Copyright (c) 2018 
- *	Jan Van Katwijk, Lazy Chair Computing
- *	This file is a rewrite of the file "msk.c" and
- *	parts of acars.c of the original acars software
- *	
  */
 #include	"channel-decoder.h"
 #include	<cstring>
@@ -246,10 +243,9 @@ void	channelDecoder::decodeAcars (uint8_t theByte) {
 	   case CRC2:
 	      blk_crc [1] = theByte;
  putmsg_lbl:
-//	      blk_lvl = 10 * log10 (Msklvl);
 	      Acarsstate = END;
 	      nbits = 8;
-	      processBlock (blk_crc, blk_txt, blk_len);
+	      processBlock (blk_crc, blk_txt, blk_len, 10.0 * log10 (Msklvl));
 	      return;
 
 	   case END:
@@ -318,7 +314,9 @@ int i,j,k;
 
 
 void	channelDecoder::processBlock (uint8_t *blk_crc,
-	                              uint8_t *blk_txt, int blk_len) {
+	                              uint8_t *blk_txt,
+	                              int blk_len,
+	                              float blk_lvl) {
 int	pn, i;
 int	pr [MAXPERR];
 uint16_t the_crc;
@@ -393,6 +391,7 @@ uint16_t the_crc;
 	   return;
 	}
 
-	myPrinter -> output_msg (channel, frequency, blk_txt, blk_len, blk_tm);
+	myPrinter -> output_msg (channel, frequency,
+	                         blk_txt, blk_len, blk_lvl, blk_tm);
 }
 

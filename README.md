@@ -1,23 +1,38 @@
 # acars-sdrplay
 
-acars is a partial rewrite in C++ of
+acars is a (partial) rewrite in C++ of
 [acarsdec][https://github.com/TLeconte/acarsdec], written by Thierry Leconte.
-The reason for this rewrite was the idea of including the SDRplay device
+The reason for this rewrite was including the SDRplay device
 as input device which required some reorganization of the decoding.
 
 ------------------------------------------------------------------------
 
-	This is work in progress
-
 ------------------------------------------------------------------------
 
-All copyrights of Thierry Leconte for the algorithmic part and
+Copyright of Thierry Leconte for the algorithmic part and
 the interpretation of the incoming data is gratefully acknowledged.
 
 ------------------------------------------------------------------------
+Supported devices
 ------------------------------------------------------------------------
 
+Since I an using an SDRplay device, and I wanted to use the - excellent -
+acarsdec software, I decided to add support for the SDRplay. By doing that
+the structure of the program was changed, it was rewritten in C++.
+
+It supports, next to the SDRplay, RTLSDR based dabsticks and the AIRspy
+devices. One modification - following from the rewrite was implemented -
+is that the number of frequencies that can be listened to is - in
+principle - unlimited.  
+
+Support for other devices is easy to implement, a pretty straigh forward
+interface between device support and the processing chain is defined.
+Not implemented is support for file input, not for soundcard input (my
+laptop does not have a microphone or line input). 
+
+------------------------------------------------------------------------
 **Creating an executable under Linux**
+------------------------------------------------------------------------
 
 The source directory contains a file "CMakeLists.txt", the normal
 way of building an executable is 
@@ -29,15 +44,16 @@ way of building an executable is
         sudo make install
 
 where XXX is one of the supported input devices, i.e. SDRPLAY, AIRSPY,
-or RTLSDR. Note that it is quite well possible to have more than
-one device included. In runtime, the software will detect which
+or RTLSDR.
+
+Note that it is quite well possible to include  more than
+one device in the configuration. In runtime, the software will detect which
 device is connected and open it.
 
 ------------------------------------------------------------------------
-
 **Commandline parameters**
-
 ------------------------------------------------------------------------
+
 
 The program is commandline driven, parameters are:
 * -f add a frequency (specified in KHz);
@@ -53,11 +69,13 @@ The program is commandline driven, parameters are:
 *	OUTTYPE_JSON 4, output in JSON format
 * -N identaddr will send the output also to the specified internet addres
      (if connection can be made to someone who is listening)
+* -n identaddr will send the output also to the specified internet address,
+     assuming that a PLANEPLOTTER is listening.
 
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
 
-# Copyright
+# Copyright 2018
 
 Copyright Jan van Katwijk <J.vanKatwijk@gmail.com>.
 Lazy Chair Computing

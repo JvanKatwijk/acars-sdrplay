@@ -13,6 +13,12 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Library General Public License for more details.
  */
+
+//
+//	The "inputProcessor" is the link between the
+//	connected device and the channel handler. It reads
+//	data, and passes it on to each of the channelhandlers.
+//
 #include	"input-processor.h"
 #include	<unistd.h>
 

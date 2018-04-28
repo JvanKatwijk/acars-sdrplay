@@ -1,6 +1,9 @@
 /*
- *  Copyright (c) 2015 Thierry Leconte
- *
+ *	Copyright (c) 2015 Thierry Leconte
+ *	Copyright (c) 2018
+ *	Jan van Katwijk, lazy Chair Computing
+ *	This file is (very) loosely based on the input handling
+ *	of the original acars software from Thierry Leconte
  *   
  *   This code is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License version 2
@@ -11,10 +14,6 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Library General Public License for more details.
  *
- *	Copyright (c) 2018
- *	Jan van Katwijk, lazy Chair Computing
- *	This file is (very) loosely based on the input handling
- *	of the original acars software from Thierry Leconte
  */
 #include	"channel-handler.h"
 

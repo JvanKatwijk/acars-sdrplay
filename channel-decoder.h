@@ -54,7 +54,8 @@ private:
 	int	fixdberr	(uint8_t *blk_txt,
                                  int blk_len, const uint16_t crc);
 	void	processBlock	(uint8_t *crc,
-                                 uint8_t *blk_txt, int blk_len);
+                                 uint8_t *blk_txt,
+	                         int blk_len, float blk_lvl);
 	int	frequency;
 	printer	*myPrinter;
 	int	channel;

@@ -1,6 +1,11 @@
 
 /*
- *  Copyright (c) 2015 Thierry Leconte
+ *	Copyright (c) 2015 Thierry Leconte
+ *	Copyright 2018, Jan van katwijk, Lazy Chair Computing
+ *
+ *	The printer code is based on the output.c file
+ *	of acars of Thierry Leconte. Added is a simple spool
+ *	mechanism and some code is organized another way.
  *
  *   
  *   This code is free software; you can redistribute it and/or modify
@@ -12,11 +17,6 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Library General Public License for more details.
  *
- *	Copyright 2018, Jan van katwijk, Lazy Chair Computing
- *
- *	The printer code is largely based on the output.c file
- *	of acars of Thierry Leconte. Added is a simple spool
- *	mechanism and some code is organized another way.
  *	
  */
 #ifndef	__ACARS_PRINTER__
@@ -74,12 +74,14 @@ class	printer {
 public:
 		printer		(int, int, int, char *);
 		~printer	(void);
-	void	output_msg	(int, int, uint8_t *, int16_t, struct timeval);
+	void	output_msg	(int, int, uint8_t *,
+	                         int16_t, float, struct timeval);
 	void	start		(void);
 	void	stop		(void);
 private:
 	void	run		(void);
-	void    process_msg	(int, int, uint8_t *, int16_t, struct timeval);
+	void    process_msg	(int, int, uint8_t *,
+	                          int16_t, float, struct timeval);
 	void	printmsg	(acarsmsg_t *, int);
 	void	printdate	(struct timeval t);
 	void	printtime	(struct timeval t);
@@ -115,6 +117,7 @@ private:
 	   int	frequency;
 	   uint8_t	blk_txt [255];
 	   int	blk_len;
+	   float	blk_lvl;
 	   struct timeval blk_tm;
 	} theData [20];
 };

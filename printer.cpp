@@ -1,6 +1,9 @@
 /*
- *  Copyright (c) 2015 Thierry Leconte
- *
+ *	Copyright (c) 2015 Thierry Leconte
+ *	Copyright (c) 2018
+ *	Jan van Katwijk, Lazy Chair Computing
+ *	This file is based on and a rewrite of acars.c and output.c
+ *	of the original acars software of Thierry Leconte
  *   
  *   This code is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License version 2
@@ -11,10 +14,6 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Library General Public License for more details.
  *
- *	Copyright (c) 2018
- *	Jan van Katwijk, Lazy Chair Computing
- *	This file is based on and a rewrite of acars.c and output.c
- *	of the original acars software of Thierry Leconte
  */
 #include	"printer.h"
 #include	<cstring>
@@ -151,7 +150,8 @@ void	printer::stop	(void) {
 }
 
 void	printer::output_msg (int channel, int frequency,  uint8_t *blk_txt,
-	                     int16_t blk_len, struct timeval blk_tm) {
+	                     int16_t blk_len,
+	                     float blk_lvl,  struct timeval blk_tm) {
 	while (!freeSlots. tryAcquire (200))
 	   if (!running. load ())
 	      return;
@@ -159,6 +159,7 @@ void	printer::output_msg (int channel, int frequency,  uint8_t *blk_txt,
 	memcpy (&theData [nextIn]. blk_txt, blk_txt, blk_len);
 	theData [nextIn]. blk_len = blk_len;
 	theData [nextIn]. blk_tm  = blk_tm;
+	theData [nextIn]. blk_lvl	= blk_lvl;
 	theData [nextIn]. channel = channel;
 	theData [nextIn]. frequency = frequency;
         nextIn = (nextIn + 1) % slots;
@@ -176,14 +177,19 @@ void	printer::run (void) {
 	                theData [nextOut]. frequency,
 	                theData [nextOut]. blk_txt,
 	                theData [nextOut]. blk_len,
+	                theData [nextOut]. blk_lvl,
 	                theData [nextOut]. blk_tm);
 	   nextOut = (nextOut + 1) % slots;
 	   freeSlots. Release ();
         }
 }
 
-void	printer::process_msg (int channel, int frequency, uint8_t *blk_txt,
-	                         int16_t blk_len, struct timeval blk_tm) {
+void	printer::process_msg (int	channel,
+	                      int	frequency,
+	                      uint8_t	*blk_txt,
+	                      int16_t	blk_len,
+	                      float	blk_lvl,
+	                      struct timeval blk_tm) {
 acarsmsg_t msg;
 int	i, k = 0;
 bool	messageFlag	= false;
@@ -191,10 +197,10 @@ bool	messageFlag	= false;
 	fprintf (stderr, "message on frequency %d\n", frequency);
 	msg. channel		= channel;
 	msg. frequency		= frequency;
-	msg. messageTime	= blk_tm;
+	msg. messageTime	= blk_tm;	
 	msg. mode		= blk_txt [k++];
 	msg. err		= 0;
-	msg. lvl		= 0;
+	msg. lvl		= blk_lvl;
 	for (i = 0; i < 7; i ++, k ++) 
 	   msg. addr [i] = blk_txt [k];
 	msg. addr [7] = 0;
@@ -508,11 +514,13 @@ char *pstr;
 
 	strcpy (txt, (char *)(msg->txt));
 	for (pstr = txt; *pstr != 0; pstr++)
-	   if (*pstr == '\n' || *pstr == '\r') *pstr = ' ';
+	   if (*pstr == '\n' || *pstr == '\r')
+	      *pstr = ' ';
 
 	sprintf (pkt, "AC%1c %7s %1c %2s %1c %4s %6s %s",
-		 msg->mode, msg->addr, msg->ack, msg->label, msg->bid, msg->no,
-		 msg->fid, txt);
+		 msg -> mode,  msg -> addr, msg -> ack,
+	         msg -> label, msg -> bid,  msg -> no,
+		 msg -> fid, txt);
 
 	write (sockfd, pkt, strlen (pkt));
 }
