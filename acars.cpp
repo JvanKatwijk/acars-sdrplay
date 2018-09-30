@@ -32,6 +32,9 @@
 #ifdef	HAVE_RTLSDR
 #include	"rtlsdr-handler.h"
 #endif
+#ifdef	HAVE_HACKRF
+#include	"hackrf-handler.h"
+#endif
 #ifdef __MINGW32__
 #include	<iostream>
 #include	<windows.h>
@@ -45,7 +48,8 @@
  */
 
 	acars::acars (std::vector<int> *freqList,
-	              int	gain,
+	              int	lnaGain,
+	              int	vgaGain,
 	              int	ppmCorrection,
 	              bool	verbose,
 	              bool	autogain,
@@ -61,37 +65,57 @@ int	frequency	= findFreq (freqList);
 	this	-> verbose	= verbose;
 //	before printing anything, we set
 	setlocale (LC_ALL, "");
-#ifdef	HAVE_SDRPLAY
+
+	theDevice	= NULL;
+#ifdef	HAVE_HACKRF
 	try {
-	   theDevice	= new sdrplayHandler (2400000,
+	   theDevice	= new hackrfHandler (2400000,
+	                                     frequency,
+	                                     ppmCorrection,
+	                                     lnaGain,
+	                                     vgaGain);
+
+	} catch (int e) {
+	   fprintf (stderr, "no hackrf device found, continue searching\n");
+	}
+#endif
+#ifdef	HAVE_SDRPLAY
+	if (theDevice == NULL)
+	   try {
+	      theDevice	= new sdrplayHandler (2400000,
 	                                      frequency,
 	                                      ppmCorrection,
-	                                      gain,
+	                                      lnaGain,
+	                                      vgaGain,
 	                                      autogain,
 	                                      0, 0);
 
-	} catch (int e) {
-	}
+	   } catch (int e) {
+	      fprintf (stderr, "no sdrplay device found, continue searching\n");
+	   }
 #endif
 #ifdef	HAVE_AIRSPY
-	try {
-	   theDevice	= new airspyHandler (2400000,
+	if (theDevice == NULL)
+	   try {
+	      theDevice	= new airspyHandler (2400000,
 	                                     frequency,
 	                                     0,
-	                                     gain);
-	} catch (int e) {
-	}
+	                                     vgaGain);
+	   } catch (int e) {
+	      fprintf (stderr, "no airspy device found, continue searching\n");
+	   }
 #endif
 #ifdef	HAVE_RTLSDR
-	try {
-	   theDevice	= new rtlsdrHandler (2400000,
+	if (theDevice == NULL)
+	   try {
+	      theDevice	= new rtlsdrHandler (2400000,
 	                                     frequency,
 	                                     0,
-	                                     gain,
+	                                     vgaGain,
 	                                     autogain,
 	                                     0);
-	} catch (int e) {
-	}
+	   } catch (int e) {
+	   }
 #endif
 
 	if (theDevice == NULL) {

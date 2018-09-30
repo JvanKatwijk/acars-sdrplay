@@ -194,7 +194,7 @@ acarsmsg_t msg;
 int	i, k = 0;
 bool	messageFlag	= false;
 
-	fprintf (stderr, "message on frequency %d\n", frequency);
+	fprintf (stderr, "message on frequency %d: ", frequency);
 	msg. channel		= channel;
 	msg. frequency		= frequency;
 	msg. messageTime	= blk_tm;	
@@ -308,7 +308,7 @@ void	printer::printmsg (acarsmsg_t *msg, int channel) {
 oooi_t	oooi;
 
 	printdate (msg -> messageTime);
-	fprintf (stderr, "\n channel %d --------------------------------\n",
+	fprintf (stderr, "\nchannel %d --------------------------------\n",
 	                                                msg -> channel);
 	fprintf (stderr, "Mode : %1c ", msg -> mode);
 	fprintf (stderr, "Label : %2s ", msg -> label);

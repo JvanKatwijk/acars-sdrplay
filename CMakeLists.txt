@@ -38,6 +38,10 @@ if(DEFINED RTLSDR)
    set(RTLSDR true)
 endif ()
 
+if(DEFINED HACKRF)
+   set(HACKRF true)
+endif ()
+
 #########################################################################
         find_package (PkgConfig)
 	find_package (LSBId)
@@ -50,6 +54,39 @@ endif ()
 
 ##########################################################################
 #	The devices
+
+	if (HACKRF)
+	   find_path (HACKRFLIB_INCLUDE_DIR
+                      NAMES hackrf.h
+                      PATHS
+                      /usr/local/include/
+                      /usr/local/include/libhackrf
+	   )
+           include_directories (${SDRPLAYLIB_INCLUDE_DIR})
+
+           find_library (HACKRFLIB hackrf)
+           if(NOT(HACKRFLIB))
+              message(FATAL_ERROR "please install -lhackrf")
+           else(NOT(HACKRFLIB))
+              list (APPEND extraLibs ${HACKRFLIB})
+           endif(NOT(HACKRFLIB))
+
+	   include_directories (
+	     ./devices/hackrf-handler
+	   )
+
+	   set ($(objectName)_HDRS
+	        ${${objectName}_HDRS}
+	        ./devices/hackrf-handler/hackrf-handler.h
+           )
+
+	   set (${objectName}_SRCS
+	        ${${objectName}_SRCS}
+	        ./devices/hackrf-handler/hackrf-handler.cpp
+	   )
+
+	 add_definitions (-DHAVE_HACKRF)
+	endif (HACKRF)
 
 	if (SDRPLAY)
 	   find_path (SDRPLAYLIB_INCLUDE_DIR

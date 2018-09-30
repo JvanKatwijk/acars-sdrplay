@@ -39,6 +39,7 @@ typedef void (*mir_sdr_StreamCallback_t)(int16_t	*xi,
 	                                 int32_t	fsChanged,
 	                                 uint32_t	numSamples,
 	                                 uint32_t	reset,
+	                                 uint32_t	hwRemoved,
 	                                 void		*cbContext);
 typedef	void	(*mir_sdr_GainChangeCallback_t)(uint32_t	gRdB,
 	                                        uint32_t	lnaGRdB,
@@ -50,26 +51,20 @@ public:
 		sdrplayHandler          (int32_t	rate,
 	                                 int32_t        frequency,
 	                                 int16_t        ppmCorrection,
-	                                 int16_t        gain,
+	                                 int16_t        lnaState,
+	                                 int16_t        GRdB,
 	                                 bool		autogain,
 	                                 uint16_t       deviceIndex,
 	                                 int16_t        antenna);
 
 		~sdrplayHandler		(void);
-	void	setVFOFrequency		(int32_t);
-	int32_t	getVFOFrequency		(void);
-
 	int32_t	getRate			(void);
 	bool	restartReader		(void);
 	void	stopReader		(void);
 	int32_t	getSamples		(std::complex<float> *, int32_t);
 	int32_t	Samples			(void);
 	void	resetBuffer		(void);
-	int16_t	maxGain			(void);
 	int16_t	bitDepth		(void);
-	void	setGain			(int32_t);
-	bool	has_autogain		(void);
-	void	set_agcControl		(bool);
 	RingBuffer<std::complex<float>>	*_I_Buffer;
 	int16_t		nrBits;
 private:
@@ -81,7 +76,8 @@ private:
 	int32_t		inputRate;
 	int32_t		frequency;
 	int16_t		ppmCorrection;
-	int		theGain;
+	int16_t		lnaState;
+	int16_t		GRdB;
 	std::atomic<bool>	running;
 	mir_sdr_AgcControlT agcMode;
 };

@@ -42,21 +42,25 @@ int	main (int argc, char ** argv) {
 int c;
 struct sigaction sigact;
 std::vector<int> freqList;
-int	gain		= 90;
+int	lnaGain		= 0;
+int	vgaGain		= 0;
 bool	autogain	= false;
-int	outtype;
+int	outtype		= 0;
 bool	verbose		= false;
 int	ppmCorrection	= 0;
 char	*rawAddr	= NULL;
 
-	while ((c = getopt (argc, argv, "f:g:al:o:p:vhn:N:")) != EOF) {
+	while ((c = getopt (argc, argv, "f:g:s:al:o:p:vhn:N:")) != EOF) {
 	int help;
 	   switch (c) {
 	      case 'f':
 	         freqList. push_back (atoi (optarg) * 1000);
 	         break;
 	      case 'g':
-	         gain		= atoi (optarg);
+	         lnaGain		= atoi (optarg);
+	         break;
+	      case 's':
+	         vgaGain		= atoi (optarg);
 	         break;
 	      case 'a':
 	         autogain	= true;
@@ -81,21 +85,25 @@ char	*rawAddr	= NULL;
 	      case 'p':
 	         ppmCorrection	= atoi (optarg);
 	         break;
+
 	      case 'v':
 	         verbose	= true;
 	         break;
+
 	      case 'n':
 	         if ((outtype & ANY_NETOUT) == 0) {
 	            rawAddr	= optarg;
 	            outtype	|= NETLOG_PLANEPLOTTER;
 	         }
 	         break;
+
 	      case 'N':
 	         if ((outtype & ANY_NETOUT) == 0) {
 	            rawAddr	= optarg;
 	            outtype	|= NETLOG_NATIVE;
 	         }
 	         break;
+
 	      case 'J':
 	         if ((outtype & ANY_NETOUT) == 0) {
 	            rawAddr	= optarg;
@@ -123,7 +131,7 @@ char	*rawAddr	= NULL;
 	   freqList. push_back (131725 * 1000);
 
 	fprintf (stderr, "rawAddr = %s\n", rawAddr);
-        acars *my_acars = new acars (&freqList, gain, ppmCorrection,
+        acars *my_acars = new acars (&freqList, lnaGain, vgaGain, ppmCorrection,
 	                              verbose, autogain, outtype, rawAddr);
 	running. store (true);
 	while (running. load ()) 
@@ -134,7 +142,12 @@ char	*rawAddr	= NULL;
 void	printOptions	(void) {
 	fprintf (stderr, "acars options: \n"
                          "-f  N: add frequency N to the list of frequencies \n"
-	                 "-g  N: set the gain (scale 1 .. 100)\n"
+	                 "-g  N: hackrf device: set lna gain\n"
+	                 "-g  N: sdrplay device: set lna state\n"
+	                 "-g  N: rtlsdr device: no meaning\n"
+	                 "-s  N: hackrf device: set vgaGain\n"
+	                 "-s  N: sdrplat device: set Gain reduction in dB\n"
+	                 "-s  N: rtlsdr device: set Gain tenths of dB\n"
 	                 "-a   : set the autogain of the device\n"
 	                 "-p  N: set the ppm correction \n"
 	                 "-v   : set verbose option\n"

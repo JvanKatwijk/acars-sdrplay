@@ -20,8 +20,9 @@ Since I an using an SDRplay device, and I wanted to use the - excellent -
 acarsdec software, I decided to add support for the SDRplay. By doing that
 the structure of the program was changed, it was rewritten in C++.
 
-It supports, next to the SDRplay, RTLSDR based dabsticks and the AIRspy
-devices. One modification - following from the rewrite was implemented -
+It supports, next to the SDRplay, RTLSDR based dabsticks, the AIRspy
+devices and HACKRF devices.
+One modification - following from the way the rewrite was implemented -
 is that the number of frequencies that can be listened to is - in
 principle - unlimited.  
 
@@ -43,12 +44,12 @@ way of building an executable is
         make
         sudo make install
 
-where XXX is one of the supported input devices, i.e. SDRPLAY, AIRSPY,
-or RTLSDR.
+where XXX is any of the supported input devices, i.e. SDRPLAY, AIRSPY,
+RTLSDR or HACKRF.
 
 Note that it is quite well possible to include  more than
 one device in the configuration. In runtime, the software will detect which
-device is connected and open it.
+device is connected and (try to) open it.
 
 ------------------------------------------------------------------------
 **Commandline parameters**
@@ -57,7 +58,6 @@ device is connected and open it.
 
 The program is commandline driven, parameters are:
 * -f add a frequency (specified in KHz);
-* -g set the gain at the connected device (scale 1 .. 100);
 * -a set the autogain at the selected device;
 * -p set the ppm correction at the selected device;
 * -v set the verbose option, will generate more output
@@ -71,6 +71,28 @@ The program is commandline driven, parameters are:
      (if connection can be made to someone who is listening)
 * -n identaddr will send the output also to the specified internet address,
      assuming that a PLANEPLOTTER is listening.
+
+Device specific parameters are the gain settings:
+
+For the RTLSDR device
+
+* -g N does not have a meaning
+* -s N set  the gain, in tenths of dB's, supported values depend on the device
+
+For the AIRspy device
+
+* -g N does not have a meaning
+* -s N sets the gain on a scale 0 .. 100
+
+For the HACKRF device
+
+* -g N sets the lna gain (range 0 .. 40)
+* -s N sets the vga gain (range 0 .. 62)
+
+For the SDRplay device
+
+* -g N sets the lnaState. The range of values depends on the device
+* -s N sets the GAIN REDUCTION (range 20 .. 59)
 
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
