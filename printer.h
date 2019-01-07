@@ -94,6 +94,7 @@ private:
 	void	addFlight	(acarsmsg_t * msg, int chn);
 	void	outpp		(acarsmsg_t * msg, int channel, struct timeval);
 	void	outsv		(acarsmsg_t * msg, int channel, struct timeval);
+	void	outjson		(void);
 	void	buildJSON	(acarsmsg_t *msg, int chn);
 	int	connectServer	(char *addr);
 	uint8_t	*jsonbuf;

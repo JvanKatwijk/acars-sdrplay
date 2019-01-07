@@ -115,6 +115,7 @@ int	frequency	= findFreq (freqList);
 	                                     autogain,
 	                                     0);
 	   } catch (int e) {
+	      fprintf (stderr, "no rtlsdr device found\n");
 	   }
 #endif
 

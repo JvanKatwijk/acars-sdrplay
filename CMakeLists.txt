@@ -46,12 +46,6 @@ endif ()
         find_package (PkgConfig)
 	find_package (LSBId)
 
-	find_package(FFTW3f)
-	if (NOT FFTW3F_FOUND)
-	   message(FATAL_ERROR "please install FFTW3")
-	endif ()
-        include_directories (${FFTW_INCLUDE_DIR})
-
 ##########################################################################
 #	The devices
 
@@ -219,7 +213,6 @@ endif ()
 	)
 
 	target_link_libraries (${objectName}
-	                       ${FFTW3F_LIBRARIES}
 	                       ${extraLibs}
 	                       -ldl
 

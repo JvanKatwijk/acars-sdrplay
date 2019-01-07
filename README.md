@@ -94,6 +94,11 @@ For the SDRplay device
 * -g N sets the lnaState. The range of values depends on the device
 * -s N sets the GAIN REDUCTION (range 20 .. 59)
 
+e.g. for the SDRplay I use
+	
+	acars-0.5 -g 2 -s 25 -f 131525 -f 131725
+
+   
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
 

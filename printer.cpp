@@ -43,10 +43,19 @@
 	gethostname (sys_hostname, sizeof(sys_hostname));
         idstation = strndup(sys_hostname, 8);
 
+	fprintf (stderr, "outtype = %o\n", outtype);
 	if ((outtype & OUTTYPE_JSON) != 0)
 	   jsonbuf	= new uint8_t [3000];
 	else
 	   jsonbuf	= NULL;
+
+	fprintf (stderr, "outtype = %o\n", outtype);
+	if ((outtype & OUTTYPE_MONITOR) != 0) {
+	   fprintf (stderr, "een monitor\n");
+//	   verbose = 0;
+	   cls ();
+	   fflush (stdout);
+        }
 
 	if (((outtype & ANY_NETOUT) == 0) || (rawAddr == NULL)) 
 	   return;
@@ -56,11 +65,7 @@
 	   outtype &= ~ANY_NETOUT;	// kill any desire to output on the net
 	else
 	   fprintf (stderr, "connected\n");
-	if ((outtype & OUTTYPE_MONITOR) != 0) {
-//	   verbose = 0;
-	   cls ();
-	   fflush (stdout);
-        }
+
 	
 }
 
@@ -194,7 +199,7 @@ acarsmsg_t msg;
 int	i, k = 0;
 bool	messageFlag	= false;
 
-	fprintf (stderr, "message on frequency %d: ", frequency);
+//	fprintf (stderr, "message on frequency %d: ", frequency);
 	msg. channel		= channel;
 	msg. frequency		= frequency;
 	msg. messageTime	= blk_tm;	
@@ -207,7 +212,7 @@ bool	messageFlag	= false;
 //
 //	ACK/NAK
 	msg. ack	= blk_txt [k++];
-	msg. ack	= 'X';
+//	msg. ack	= 'X';
 
 	msg. label [0]	= blk_txt [k++];
 	msg. label [1]	= blk_txt [k++];
@@ -251,8 +256,12 @@ bool	messageFlag	= false;
 //	txt end 
 	msg. be = blk_txt [blk_len - 1];
 
+	fprintf (stderr, "outtype is hiero %d\n", outtype);
 	if (((outtype & OUTTYPE_MONITOR) != 0) && messageFlag)
 	   addFlight (&msg, channel);
+
+	if ((outtype & (ANY_OUTPUT)) != 0)
+	   show_output (&msg, channel, blk_tm);
 
 	if ((outtype & (NETLOG_JSON |OUTTYPE_JSON)) != 0) {
 	   handle_json (&msg, channel, blk_tm);
@@ -262,8 +271,6 @@ bool	messageFlag	= false;
 	if ((outtype & ANY_NETOUT) != 0)
 	   handle_netout (&msg, channel, blk_tm);
 
-	if ((outtype & (ANY_OUTPUT)) != 0)
-	   show_output (&msg, channel, blk_tm);
 }
 
 void	printer::handle_json (acarsmsg_t *msg, int channel,
@@ -285,6 +292,7 @@ void	printer::handle_netout (acarsmsg_t *msg, int channel,
 }
 
 void	printer::show_output (acarsmsg_t *msg, int channel, struct timeval tv) {
+	fprintf (stderr, "output ....\n");
 	switch (outtype) {
 	   default:		// should not happen
 	      break;
@@ -304,12 +312,21 @@ void	printer::show_output (acarsmsg_t *msg, int channel, struct timeval tv) {
 	}
 }
 
+void	printer::outjson (void) {
+char pkt [500];
+
+        snprintf(pkt, sizeof(pkt), "%s\n", jsonbuf);
+        write (sockfd, pkt, strlen (pkt));
+}
+
 void	printer::printmsg (acarsmsg_t *msg, int channel) {
 oooi_t	oooi;
 
+	fprintf (stderr, "\n[#%1d (F:%3.3f L:%+3d E:%1d) ", channel + 1,
+                        msg -> frequency / 1000000.0, msg->lvl, msg->err);
+
 	printdate (msg -> messageTime);
-	fprintf (stderr, "\nchannel %d --------------------------------\n",
-	                                                msg -> channel);
+	fprintf (stderr, " --------------------------------\n");
 	fprintf (stderr, "Mode : %1c ", msg -> mode);
 	fprintf (stderr, "Label : %2s ", msg -> label);
 	if (msg -> bid) {
@@ -410,7 +427,6 @@ flight_t *fl;
 
 	   fl = fl -> next;
 	}
-
 	fflush(stdout);
 }
 
@@ -526,7 +542,7 @@ char *pstr;
 }
 
 void printer::outsv (acarsmsg_t * msg, int chn, struct timeval tv) {
-char pkt[500];
+char pkt [500];
 struct tm tmp;
 
 	gmtime_r (& (tv.tv_sec), &tmp);
