@@ -16,6 +16,8 @@ the interpretation of the incoming data is gratefully acknowledged.
 Supported devices
 ------------------------------------------------------------------------
 
+![acars-sdrplay with sdrplay input](/acars-sdrplay.png?raw=true)
+
 Since I an using an SDRplay device, and I wanted to use the - excellent -
 acarsdec software, I decided to add support for the SDRplay. By doing that
 the structure of the program was changed, it was rewritten in C++.
